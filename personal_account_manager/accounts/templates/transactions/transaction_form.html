@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if transaction %}Edit{% else %}Add{% endif %} Transaction{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h2 class="text-lg font-medium text-gray-900">
+                {% if transaction %}Edit{% else %}Add{% endif %} Transaction
+            </h2>
+            
+            <form method="post" class="mt-6 space-y-6">
+                {% csrf_token %}
+                
+                <!-- Account Selection -->
+                <div>
+                    <label for="account" class="block text-sm font-medium text-gray-700">Account</label>
+                    <select name="account" id="account" required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">Select an account</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}" {% if transaction.account_id == account.id %}selected{% endif %}>
+                            {{ account.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Transaction Type -->
+                <div>
+                    <label for="transaction_type" class="block text-sm font-medium text-gray-700">Type</label>
+                    <select name="transaction_type" id="transaction_type" required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="income" {% if transaction.transaction_type == 'income' %}selected{% endif %}>Income</option>
+                        <option value="expense" {% if transaction.transaction_type == 'expense' %}selected{% endif %}>Expense</option>
+                    </select>
+                </div>
+
+                <!-- Amount -->
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="amount" id="amount" step="0.01" required
+                               value="{{ transaction.amount|default:'' }}"
+                               class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
+                               placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                    <select name="category" id="category" required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">Select a category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if transaction.category_id == category.id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date -->
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" name="date" id="date" required
+                           value="{{ transaction.date|date:'Y-m-d'|default:'' }}"
+                           class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" id="description" rows="3"
+                              class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">{{ transaction.description|default:'' }}</textarea>
+                </div>
+
+                <!-- Recurrence (only for new transactions) -->
+                {% if not transaction %}
+                <div>
+                    <label for="recurrence_type" class="block text-sm font-medium text-gray-700">Recurrence</label>
+                    <select name="recurrence_type" id="recurrence_type"
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="none">No recurrence</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+
+                <div id="recurrence_end_date_container" style="display: none;">
+                    <label for="recurrence_end_date" class="block text-sm font-medium text-gray-700">Recurrence End Date</label>
+                    <input type="date" name="recurrence_end_date" id="recurrence_end_date"
+                           class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                </div>
+                {% endif %}
+
+                <!-- Submit Button -->
+                <div class="flex justify-end space-x-3">
+                    <a href="{% url 'dashboard' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        {% if transaction %}Update{% else %}Add{% endif %} Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const recurrenceType = document.getElementById('recurrence_type');
+    const recurrenceEndDateContainer = document.getElementById('recurrence_end_date_container');
+
+    if (recurrenceType && recurrenceEndDateContainer) {
+        recurrenceType.addEventListener('change', function() {
+            if (this.value !== 'none') {
+                recurrenceEndDateContainer.style.display = 'block';
+                document.getElementById('recurrence_end_date').required = true;
+            } else {
+                recurrenceEndDateContainer.style.display = 'none';
+                document.getElementById('recurrence_end_date').required = false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
