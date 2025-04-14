@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Accounts - Personal Account Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="md:flex md:items-center md:justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Your Accounts</h2>
+        <a href="{% url 'account_create' %}" 
+           class="mt-4 md:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <i class="fas fa-plus mr-2"></i>
+            Add Account
+        </a>
+    </div>
+
+    <!-- Account Cards Grid -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for account in accounts %}
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        {% if account.account_type == 'checking' %}
+                            <i class="fas fa-wallet text-blue-500 text-2xl"></i>
+                        {% elif account.account_type == 'savings' %}
+                            <i class="fas fa-piggy-bank text-green-500 text-2xl"></i>
+                        {% elif account.account_type == 'credit' %}
+                            <i class="fas fa-credit-card text-purple-500 text-2xl"></i>
+                        {% elif account.account_type == 'investment' %}
+                            <i class="fas fa-chart-line text-yellow-500 text-2xl"></i>
+                        {% elif account.account_type == 'cash' %}
+                            <i class="fas fa-money-bill text-green-500 text-2xl"></i>
+                        {% else %}
+                            <i class="fas fa-university text-gray-500 text-2xl"></i>
+                        {% endif %}
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-900">{{ account.name }}</h3>
+                            <p class="text-sm text-gray-500">{{ account.get_account_type_display }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <a href="{% url 'account_edit' account.id %}" class="text-indigo-600 hover:text-indigo-900">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex justify-between text-sm font-medium">
+                        <span class="text-gray-500">Balance</span>
+                        <span class="{% if account.balance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            ${{ account.balance|floatformat:2 }}
+                        </span>
+                    </div>
+                    {% if account.bank_name %}
+                    <div class="mt-2 flex justify-between text-sm">
+                        <span class="text-gray-500">Bank</span>
+                        <span class="text-gray-900">{{ account.bank_name }}</span>
+                    </div>
+                    {% endif %}
+                    {% if account.last_reconciled %}
+                    <div class="mt-2 flex justify-between text-sm">
+                        <span class="text-gray-500">Last Reconciled</span>
+                        <span class="text-gray-900">{{ account.last_reconciled|date:"M d, Y" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'account_detail' account.id %}" 
+                       class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        View Details
+                        <i class="fas fa-chevron-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-12 bg-gray-50 rounded-lg">
+            <i class="fas fa-university text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500">No accounts found. Add your first account to get started!</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Summary Section -->
+    <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Account Summary</h3>
+        </div>
+        <div class="border-t border-gray-200">
+            <dl>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Total Balance</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        ${{ accounts.aggregate.total_balance|default:"0.00"|floatformat:2 }}
+                    </dd>
+                </div>
+                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Active Accounts</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {{ accounts.filter.is_active.count }}
+                    </dd>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">Last Updated</dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {{ accounts.first.updated_at|date:"M d, Y H:i" }}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}
