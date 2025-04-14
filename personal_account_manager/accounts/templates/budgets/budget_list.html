@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Budgets - Personal Account Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="md:flex md:items-center md:justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Budget Planning</h2>
+        <a href="{% url 'budget_create' %}" 
+           class="mt-4 md:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <i class="fas fa-plus mr-2"></i>
+            Create Budget
+        </a>
+    </div>
+
+    <!-- Budget Overview -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Budget Overview</h3>
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {% for budget in budgets %}
+                <div class="bg-white overflow-hidden shadow rounded-lg divide-y divide-gray-200">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-pie text-indigo-500 text-xl"></i>
+                                <h4 class="ml-2 text-lg font-medium text-gray-900">{{ budget.category.name }}</h4>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                {% if budget.period == 'monthly' %}bg-blue-100 text-blue-800
+                                {% elif budget.period == 'quarterly' %}bg-purple-100 text-purple-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ budget.get_period_display }}
+                            </span>
+                        </div>
+
+                        {% with spent=budget.get_spending %}
+                        <div class="space-y-3">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Budget Amount</span>
+                                <span class="font-medium text-gray-900">${{ budget.amount|floatformat:2 }}</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Spent</span>
+                                <span class="font-medium {% if spent > budget.amount %}text-red-600{% else %}text-green-600{% endif %}">
+                                    ${{ spent|floatformat:2 }}
+                                </span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-500">Remaining</span>
+                                <span class="font-medium {% if budget.amount < spent %}text-red-600{% else %}text-green-600{% endif %}">
+                                    ${{ budget.amount|subtract:spent|floatformat:2 }}
+                                </span>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            {% with percentage=spent|divide:budget.amount|multiply:100 %}
+                            <div class="relative pt-1">
+                                <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+                                    <div style="width: {{ percentage|min:100 }}%"
+                                         class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center 
+                                         {% if percentage > 100 %}bg-red-500
+                                         {% elif percentage > 80 %}bg-yellow-500
+                                         {% else %}bg-green-500{% endif %}">
+                                    </div>
+                                </div>
+                                <div class="text-right mt-1">
+                                    <span class="text-xs font-semibold inline-block text-gray-600">
+                                        {{ percentage|floatformat:1 }}%
+                                    </span>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        </div>
+                        {% endwith %}
+
+                        <div class="mt-4 flex justify-between items-center">
+                            <div class="text-sm text-gray-500">
+                                {{ budget.start_date|date:"M d, Y" }} - 
+                                {% if budget.end_date %}
+                                    {{ budget.end_date|date:"M d, Y" }}
+                                {% else %}
+                                    Ongoing
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'budget_edit' budget.id %}" 
+                               class="text-indigo-600 hover:text-indigo-900">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full bg-gray-50 rounded-lg p-6 text-center">
+                    <i class="fas fa-chart-pie text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No budgets found. Create your first budget to start tracking your spending!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Tips -->
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Budget Tips</h3>
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                <ul class="list-disc pl-5 space-y-2">
+                    <li>Set realistic budgets based on your historical spending patterns</li>
+                    <li>Review and adjust your budgets regularly</li>
+                    <li>Consider setting aside money for savings and emergencies</li>
+                    <li>Track your spending consistently to stay within budget</li>
+                </ul>
+            </div>
+            <div class="mt-5">
+                <a href="{% url 'budget_create' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Start Budgeting
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
