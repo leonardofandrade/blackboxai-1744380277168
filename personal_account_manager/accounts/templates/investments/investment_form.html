@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if investment %}Edit Investment - {{ investment.name }}{% else %}Add New Investment{% endif %} - Personal Account Manager
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="md:flex md:items-center md:justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">
+                    {% if investment %}Edit Investment{% else %}Add New Investment{% endif %}
+                </h2>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Investment Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Investment Name</label>
+                    <div class="mt-1">
+                        <input type="text" name="name" id="name" required
+                               value="{{ investment.name|default:'' }}"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                               placeholder="e.g., Apple Inc., S&P 500 ETF">
+                    </div>
+                </div>
+
+                <!-- Symbol -->
+                <div>
+                    <label for="symbol" class="block text-sm font-medium text-gray-700">Symbol/Ticker</label>
+                    <div class="mt-1">
+                        <input type="text" name="symbol" id="symbol" required
+                               value="{{ investment.symbol|default:'' }}"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md uppercase"
+                               placeholder="e.g., AAPL, SPY">
+                    </div>
+                </div>
+
+                <!-- Investment Type -->
+                <div>
+                    <label for="investment_type" class="block text-sm font-medium text-gray-700">Investment Type</label>
+                    <div class="mt-1">
+                        <select name="investment_type" id="investment_type" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Select Type</option>
+                            {% for type, label in investment.INVESTMENT_TYPES %}
+                            <option value="{{ type }}" {% if investment and investment.investment_type == type %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Account -->
+                <div>
+                    <label for="account" class="block text-sm font-medium text-gray-700">Investment Account</label>
+                    <div class="mt-1">
+                        <select name="account" id="account" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Select Account</option>
+                            {% for account in accounts %}
+                            <option value="{{ account.id }}" {% if investment and investment.account.id == account.id %}selected{% endif %}>
+                                {{ account.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Number of Shares -->
+                <div>
+                    <label for="shares" class="block text-sm font-medium text-gray-700">Number of Shares/Units</label>
+                    <div class="mt-1">
+                        <input type="number" name="shares" id="shares" required
+                               step="0.0001" min="0"
+                               value="{{ investment.shares|default:'' }}"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                               placeholder="0.0000">
+                    </div>
+                </div>
+
+                <!-- Purchase Price -->
+                <div>
+                    <label for="purchase_price" class="block text-sm font-medium text-gray-700">Purchase Price per Share</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="purchase_price" id="purchase_price" required
+                               step="0.01" min="0"
+                               value="{{ investment.purchase_price|default:'' }}"
+                               class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
+                               placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Current Price -->
+                <div>
+                    <label for="current_price" class="block text-sm font-medium text-gray-700">Current Price per Share</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="current_price" id="current_price" required
+                               step="0.01" min="0"
+                               value="{{ investment.current_price|default:'' }}"
+                               class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
+                               placeholder="0.00">
+                    </div>
+                </div>
+
+                <!-- Purchase Date -->
+                <div>
+                    <label for="purchase_date" class="block text-sm font-medium text-gray-700">Purchase Date</label>
+                    <div class="mt-1">
+                        <input type="date" name="purchase_date" id="purchase_date" required
+                               value="{{ investment.purchase_date|date:'Y-m-d'|default:'' }}"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label for="notes" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+                    <div class="mt-1">
+                        <textarea name="notes" id="notes" rows="3"
+                                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                  placeholder="Add any notes about this investment">{{ investment.notes|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-3">
+                    <a href="{% url 'investment_list' %}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        {% if investment %}Save Changes{% else %}Add Investment{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Investment Tips -->
+    <div class="mt-8 bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Investment Tips</h3>
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                <ul class="list-disc pl-5 space-y-2">
+                    <li>Diversify your portfolio across different investment types</li>
+                    <li>Keep track of your purchase prices for tax purposes</li>
+                    <li>Regularly update current prices to monitor performance</li>
+                    <li>Consider your risk tolerance when choosing investments</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format currency inputs
+    const currencyInputs = ['purchase_price', 'current_price'];
+    currencyInputs.forEach(function(inputId) {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('blur', function(e) {
+                if (e.target.value) {
+                    e.target.value = parseFloat(e.target.value).toFixed(2);
+                }
+            });
+        }
+    });
+
+    // Format shares input
+    const sharesInput = document.getElementById('shares');
+    if (sharesInput) {
+        sharesInput.addEventListener('blur', function(e) {
+            if (e.target.value) {
+                e.target.value = parseFloat(e.target.value).toFixed(4);
+            }
+        });
+    }
+
+    // Convert symbol to uppercase
+    const symbolInput = document.getElementById('symbol');
+    if (symbolInput) {
+        symbolInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    }
+
+    // Set maximum purchase date to today
+    const purchaseDateInput = document.getElementById('purchase_date');
+    const today = new Date().toISOString().split('T')[0];
+    if (purchaseDateInput) {
+        purchaseDateInput.max = today;
+    }
+});
+</script>
+{% endblock %}
