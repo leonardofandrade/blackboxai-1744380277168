@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if account %}Edit Account - {{ account.name }}{% else %}Create New Account{% endif %} - Personal Account Manager
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="md:flex md:items-center md:justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">
+                    {% if account %}Edit Account{% else %}Create New Account{% endif %}
+                </h2>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Account Name -->
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Account Name</label>
+                    <div class="mt-1">
+                        <input type="text" name="name" id="name" required
+                               value="{{ account.name|default:'' }}"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                               placeholder="e.g., Main Checking, Savings Account">
+                    </div>
+                </div>
+
+                <!-- Account Type -->
+                <div>
+                    <label for="account_type" class="block text-sm font-medium text-gray-700">Account Type</label>
+                    <div class="mt-1">
+                        <select name="account_type" id="account_type" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="">Select Account Type</option>
+                            {% for type, label in ACCOUNT_TYPES %}
+                            <option value="{{ type }}" {% if account and account.account_type == type %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Bank Name -->
+                <div>
+                    <label for="bank_name" class="block text-sm font-medium text-gray-700">Bank Name (Optional)</label>
+                    <div class="mt-1">
+                        <input type="text" name="bank_name" id="bank_name"
+                               value="{{ account.bank_name|default:'' }}"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                               placeholder="e.g., Chase, Bank of America">
+                    </div>
+                </div>
+
+                <!-- Account Number -->
+                <div>
+                    <label for="account_number" class="block text-sm font-medium text-gray-700">Account Number (Optional)</label>
+                    <div class="mt-1">
+                        <input type="text" name="account_number" id="account_number"
+                               value="{{ account.account_number|default:'' }}"
+                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                               placeholder="Last 4 digits of account number">
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500">
+                        For security, only enter the last 4 digits of your account number.
+                    </p>
+                </div>
+
+                <!-- Initial Balance -->
+                {% if not account %}
+                <div>
+                    <label for="balance" class="block text-sm font-medium text-gray-700">Initial Balance</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="balance" id="balance"
+                               step="0.01"
+                               class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
+                               placeholder="0.00">
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Notes -->
+                <div>
+                    <label for="notes" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+                    <div class="mt-1">
+                        <textarea name="notes" id="notes" rows="3"
+                                  class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ account.notes|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Active Status -->
+                <div class="relative flex items-start">
+                    <div class="flex items-center h-5">
+                        <input type="checkbox" name="is_active" id="is_active"
+                               {% if not account or account.is_active %}checked{% endif %}
+                               class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="is_active" class="font-medium text-gray-700">Active Account</label>
+                        <p class="text-gray-500">Inactive accounts will be hidden from the main dashboard.</p>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-3">
+                    <a href="{% url 'manage_accounts' %}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        {% if account %}Save Changes{% else %}Create Account{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format currency input
+    const balanceInput = document.getElementById('balance');
+    if (balanceInput) {
+        balanceInput.addEventListener('blur', function(e) {
+            if (e.target.value) {
+                e.target.value = parseFloat(e.target.value).toFixed(2);
+            }
+        });
+    }
+
+    // Validate account number (only allow numbers and limit to 4 digits)
+    const accountNumberInput = document.getElementById('account_number');
+    accountNumberInput.addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4);
+    });
+});
+</script>
+{% endblock %}
